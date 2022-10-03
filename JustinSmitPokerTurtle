@@ -1,0 +1,273 @@
+import random
+import time
+import turtle
+
+window = turtle.Screen()
+window.bgcolor("green")
+window.setup(800, 250)
+window.title("Poker Game")
+
+pen = turtle.Turtle()
+pen.speed(50)
+pen.hideturtle()
+
+
+class Card:
+    def __init__(self, name, suit):
+        self.name = name
+        self.suit = suit
+        self.suit_symbols = {"S": "♠️", "C": "♣️", "H": "♥️", "D": "♦️"}
+
+    # Return value of card
+    def value_of_card(self):
+        if self.name == "A":
+            return int(14)
+        if self.name == "K":
+            return int(13)
+        if self.name == "Q":
+            return int(12)
+        if self.name == "J":
+            return int(11)
+        return int(self.name)
+
+    # Return suit of card
+    def suit_of_card(self):
+        return self.suit
+
+    # Print card to console
+    def print_card(self):
+        print(f"{self.name}{self.suit_symbols[self.suit]}", end="")
+        # print(f"{self.name}, {self.suit}")
+
+    # Draw card on window display
+    def render_card(self, x, y, pen):
+        # draw card frame and fill
+        pen.penup()
+        pen.color("white")
+        pen.goto(x-40, y+60)
+        pen.begin_fill()
+        pen.pendown()
+        pen.goto(x + 40, y + 60)
+        pen.goto(x + 40, y - 60)
+        pen.goto(x - 40, y - 60)
+        pen.goto(x - 40, y + 60)
+        pen.end_fill()
+        pen.penup()
+
+        # Draw suit_symbol in middle of card
+        pen.penup()
+        pen.goto(x-12, y-25)
+        pen.write(self.suit_symbols[self.suit], False, font=("Courier New", 30, "normal"))
+
+        # draw name in corners of the card
+        pen.penup()
+        pen.color("black")
+        pen.goto(x - 35, y + 38)
+        pen.write(self.name, False, font=("Courier New", 15, "bold"))
+        pen.penup()
+        pen.goto(x + 23, y - 60)
+        pen.write(self.name, False, font=("Courier New", 15, "bold"))
+
+
+class Deck:
+    def __init__(self):
+        self.cards = []
+        self.hand = []
+
+        names = ("A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2")
+        suits = ("S", "C", "H", "D")
+
+        # Test hand to check hand rank methods
+        # card1 = Card("A", "D")
+        # card2 = Card("K", "D")
+        # card3 = Card("Q", "D")
+        # card4 = Card("J", "D")
+        # card5 = Card("10", "D")
+        # self.hand = [card1, card2, card3, card4, card5]
+
+        # Create deck of cards
+        for name in names:
+            for suit in suits:
+                card = Card(name, suit)
+                self.cards.append(card)
+                # card.print_card()
+
+    def shuffle(self):
+        # write shuffling on screen
+        pen.penup()
+        pen.goto(-200, -20)
+        pen.write("Shuffling...", False, font=("Courier New", 50, "normal"))
+        time.sleep(2)
+        pen.clear()
+
+        # Randomize deck and add 5 cards to hand
+        random.shuffle(self.cards)
+        for _ in range(5):
+            self.hand.append(self.cards.pop())
+
+    def show_hand(self):
+        # draw 5 cards face up on the screen
+        x = -200
+        for card in self.hand:
+            card.render_card(x, 0, pen)
+            x += 100
+
+        # print contents of hand to the console
+        print("Shuffling...Shuffling...Shuffling...")
+        print("Your hand: ", end="")
+        for card in self.hand:
+            card.print_card()
+        print()
+        print("You have: ", end="")
+
+    def hand_distribution(self):
+        # create card distribution of whole deck
+        dist = {i: 0 for i in range(1, 15)}
+        for card in self.hand:
+            dist[card.value_of_card()] += 1
+            dist[1] = dist[14]
+
+        # print card distribution to console
+        # for d in dist:
+        #     print(f"{d} : {dist[d]}")
+        return dist
+
+    def is_four_of_kind(self):
+        dist = self.hand_distribution()
+        for d in dist:
+            if dist[d] == 4:
+                return True
+        return False
+
+    def is_full_house(self):
+        dist = self.hand_distribution()
+        pair = False
+        three_of_kind = False
+        for d in dist:
+            if dist[d] == 2:
+                pair = True
+            if dist[d] == 3:
+                three_of_kind = True
+        if pair and three_of_kind:
+            return True
+        return False
+
+    def is_flush(self):
+        num_suit = 0
+        test_card = self.hand[0]
+        for card in self.hand:
+            if card.suit == test_card.suit:
+                num_suit += 1
+        if num_suit == 5:
+            return True
+        return False
+
+    def is_straight(self):
+        dist = self.hand_distribution()
+        counter = 0
+        for d in dist:
+            if dist[d] == 0:
+                counter = 0
+            if dist[d] == 1:
+                counter += 1
+            if counter == 5:
+                return True
+        return False
+
+    def is_three_of_kind(self):
+        dist = self.hand_distribution()
+        for d in dist:
+            if dist[d] == 3:
+                return True
+        return False
+
+    def is_two_pair(self):
+        dist = self.hand_distribution()
+        pairs = []
+        for d in dist:
+            if d > 1 and dist[d] == 2 and d not in pairs:
+                pairs.append(d)
+        if len(pairs) == 2:
+            return True
+        return False
+
+    def is_pair(self):
+        dist = self.hand_distribution()
+        for d in dist:
+            if dist[d] == 2:
+                return True
+        return False
+
+    def high_card(self):
+        high_card = 0
+        dist = self.hand_distribution()
+        for d in dist:
+            if dist[d] > 0:
+                high_card = d
+        return high_card
+
+
+deck = Deck()
+deck.shuffle()
+deck.show_hand()
+
+pen.penup()
+pen.color("black")
+pen.goto(-240, -100)
+
+if deck.is_flush() and deck.is_straight() and deck.high_card() == 14:
+    print("Royal Flush!")
+    pen.write("Royal Flush!", False, font=("Courier New", 24, "normal"))
+
+elif deck.is_flush() and deck.is_straight():
+    print("Straight Flush!")
+    pen.write("Straight Flush!", False, font=("Courier New", 24, "normal"))
+
+elif deck.is_four_of_kind():
+    print("Four of a kind!")
+    pen.write("Four of a kind!", False, font=("Courier New", 24, "normal"))
+
+elif deck.is_full_house():
+    print("Full House!")
+    pen.write("Full House!", False, font=("Courier New", 24, "normal"))
+
+elif deck.is_flush():
+    print("Flush!")
+    pen.write("Flush!", False, font=("Courier New", 24, "normal"))
+
+elif deck.is_straight():
+    print("Straight!")
+    pen.write("Straight!", False, font=("Courier New", 24, "normal"))
+
+elif deck.is_three_of_kind():
+    print("Three of a kind!")
+    pen.write("Three of a kind!", False, font=("Courier New", 24, "normal"))
+
+elif deck.is_two_pair():
+    print("Two pairs!")
+    pen.write("Two pairs!", False, font=("Courier New", 24, "normal"))
+
+elif deck.is_pair():
+    print("Single Pair!")
+    pen.write("Single Pair!", False, font=("Courier New", 24, "normal"))
+
+else:
+    hc = deck.high_card()
+    if hc < 11:
+        print(f"High Card: {hc}")
+        pen.write(f"High Card: {hc}", False, font=("Courier New", 24, "normal"))
+    if hc == 11:
+        print("High Card: Jack")
+        pen.write(f"High Card: Jack", False, font=("Courier New", 24, "normal"))
+    if hc == 12:
+        print("High Card: Queen")
+        pen.write(f"High Card: Queen", False, font=("Courier New", 24, "normal"))
+    if hc == 13:
+        print("High Card: King")
+        pen.write(f"High Card: King", False, font=("Courier New", 24, "normal"))
+    if hc == 14:
+        print("High Card: Ace")
+        pen.write(f"High Card: Ace", False, font=("Courier New", 24, "normal"))
+
+window.mainloop()
+
